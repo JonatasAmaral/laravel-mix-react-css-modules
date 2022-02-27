@@ -1,3 +1,5 @@
+import { deepClone, concatRegexp } from "./helpers"
+
 class ReactCSSModules {
   /**
    * Initialise the class
@@ -5,7 +7,11 @@ class ReactCSSModules {
    * @return {void}
    */
   constructor() {
-    this.scopedName = this.defaultScopedName();
+    // default scodeName
+    this.scopedName = "[name]__[local]___[hash:base64:5]";
+
+    // creates sourceMaps of cssModules. false by default for compatibility
+    this.createSourceMap = false
   }
 
   /**
@@ -18,15 +24,6 @@ class ReactCSSModules {
    */
   name() {
     return "reactCSSModules";
-  }
-
-  /**
-   * Return the default scoped name value
-   *
-   * @return {string}
-   */
-  defaultScopedName() {
-    return "[name]__[local]___[hash:base64:5]";
   }
 
   /**
@@ -47,13 +44,27 @@ class ReactCSSModules {
    * Ex: register(src, output) {}
    * Ex: mix.yourPlugin('src/path', 'output/path');
    *
-   * @param  {*} ...params
+   * @param {string | {scopedName: string, createSourceMap: boolean}} args
    * @return {void}
    *
    */
-  register(scopedName) {
-    if (scopedName) {
+  register(args) {
+    // compatibility with single 'scopedName' arg
+    if (typeof args === 'string') {
+      this.scopedName = classNamePattern;
+      return;
+    }
+
+    // optional configuration parameters
+    if (typeof args !== 'object') return; // invalid config
+
+    const { scopedName, sourceMap } = args;
+
+    if (scopedName !== undefined) {
       this.scopedName = scopedName;
+    }
+    if (createSourceMap !== undefined) {
+      this.createSourceMap = createSourceMap;
     }
   }
 
@@ -72,9 +83,9 @@ class ReactCSSModules {
 
       // Loop through all loaders on regular use options
       rule.use = Array.isArray(rule.use) ? rule.use.map(this.replaceLoaderOptions) : rule.use;
-      
+
       // Alternatively, loop through all of the oneOf options (if they exist)
-      rule.oneOf = Array.isArray(rule.oneOf) 
+      rule.oneOf = Array.isArray(rule.oneOf)
         // And then replace all the loaders on each individual option
         ? rule.oneOf.map(oneOf => {
           oneOf.use = oneOf.use.map(this.replaceLoaderOptions);
@@ -104,16 +115,13 @@ class ReactCSSModules {
       modules: {
         mode: "local",
         localIdentName: this.scopedName,
+        sourceMap: this.createSourceMap,
+        url: true // enable to solve webpack aliases
       },
     };
 
     // Convert string syntax to object syntax if neccessary
-    rule =
-      typeof rule === "string"
-        ? {
-            rule,
-          }
-        : rule;
+    rule = typeof rule === "string" ? { rule } : rule;
 
     // Inject our options into the loader
     rule.options = rule.options

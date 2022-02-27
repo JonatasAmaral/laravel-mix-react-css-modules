@@ -30,6 +30,28 @@ let mix = require('laravel-mix');
 require('laravel-mix-react-css-modules');
 
 // DEFAULT: [name]__[local]___[hash:base64:5]
-mix.react('resources/assets/app.js', 'public/js')
-   .reactCSSModules('[path]__[name]___[hash:base64]');
+mix.reactCSSModules()
+
+// Change className pattern
+mix.reactCSSModules('[path]__[name]___[hash:base64]');
+mix.reactCSSModules(
+   {scopedName: '[path]__[name]___[hash:base64]'}
+);
+```
+
+You can also enable sourceMaps to the generated styles with the configuration object.
+```javascript
+mix.reactCSSModules(
+   {createSourceMap: true}
+);
+```
+
+You can all configurations using the object method
+```javascript
+mix.reactCSSModules(
+   {
+      scopedName: '[path]__[name]___[hash:base64]'
+      createSourceMap: true,
+   }
+);
 ```
